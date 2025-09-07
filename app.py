@@ -24,10 +24,6 @@ def index():
 
 @app.route("/processar", methods=["POST"])
 def processar():
-    """
-    Recebe vídeo, extrai áudio via ffmpeg, envia áudio ao n8n e retorna utterances.
-    """
-    # Verifica se campo 'file' está presente e contém arquivo
     if "file" not in request.files:
         return jsonify({"error": "Arquivo não enviado (campo file)."}), 400
 
@@ -38,17 +34,14 @@ def processar():
     if not allowed_file(file.filename):
         return jsonify({"error": "Formato não suportado."}), 400
 
-    # Salvar vídeo temporário e extrair áudio com ffmpeg
     suffix = "." + file.filename.rsplit(".", 1)[1].lower()
     tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
     tmp_video_path = tmp_video.name
     file.save(tmp_video_path)
 
-    # Corrigir criação do caminho do áudio
     tmp_audio_path = tmp_video_path.rsplit(".", 1)[0] + ".mp3"
 
     try:
-        # Executar ffmpeg para extrair áudio
         subprocess.run(
             ["ffmpeg", "-i", tmp_video_path, "-q:a", "0", "-map", "a", tmp_audio_path, "-y"],
             check=True,
@@ -56,7 +49,6 @@ def processar():
             stderr=subprocess.PIPE,
         )
 
-        # Enviar áudio ao n8n
         with open(tmp_audio_path, "rb") as f:
             files = {"file": (os.path.basename(tmp_audio_path), f, "audio/mpeg")}
             data = {"video_filename": file.filename}
@@ -66,43 +58,7 @@ def processar():
             return jsonify({"error": f"Erro no n8n audio: {r.status_code}", "body": r.text}), 502
 
         result = r.json()
-        # Ajuste para extrair utterances mesmo se resultado for lista
         if isinstance(result, list) and result:
             utterances = result[0].get("utterances", [])
         else:
-            utterances = result.get("utterances", []) if isinstance(result, dict) else []
-
-        return jsonify({"utterances": utterances})
-
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Falha na conversão ffmpeg", "stderr": e.stderr.decode(errors="ignore")}), 500
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        try:
-            if os.path.exists(tmp_video_path):
-                os.remove(tmp_video_path)
-            if os.path.exists(tmp_audio_path):
-                os.remove(tmp_audio_path)
-        except Exception:
-            pass
-
-
-@app.route("/enviar_solar", methods=["POST"])
-def enviar_solar():
-    """
-    Recebe JSON com transcricao e envia ao n8n de transcrição final.
-    """
-    payload = request.get_json(silent=True) or {}
-    transcricao = payload.get("transcricao", [])
-    try:
-        r = requests.post(N8N_WEBHOOK_URL_TRANSCRICAO, json={"transcricao": transcricao}, timeout=120)
-        if r.status_code == 200:
-            return jsonify({"ok": True})
-        return jsonify({"ok": False, "status": r.status_code, "body": r.text}), 502
-    except Exception as e:
-        return jsonify({"ok": False, "error": str(e)}), 500
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)), debug=False)
+            utterances = result.get
