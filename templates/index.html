@@ -1,295 +1,478 @@
-{% extends "base.html" %}
-{% block content %}
-<div class="flex-center-container">
-  <div class="main-header">
-    <div class="main-title">
-      <i class="fas fa-video"></i> Transcrição Chat
-    </div>
-    <div class="main-subtitle">
-      Extraia áudio de vídeos e gere transcrições inteligentes
-    </div>
-  </div>
-</div>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processador de Vídeo/Áudio - Defensoria Pública do DF</title>
+    
+    <!-- Tailwind CSS Compilado -->
+    <link href="{{ url_for('static', filename='css/tw.css') }}" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 to-defensoria-50 font-['Inter']">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header Institucional -->
+        <header class="text-center mb-12">
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <div class="bg-defensoria-950 p-3 rounded-full shadow-lg">
+                    <i class="fas fa-balance-scale text-white text-2xl"></i>
+                </div>
+                <div class="text-left">
+                    <h1 class="text-3xl font-bold text-defensoria-800 tracking-tight">
+                        Defensoria Pública do DF
+                    </h1>
+                    <p class="text-defensoria-600 font-medium">Sistema de Transcrição de Áudio e Vídeo</p>
+                </div>
+            </div>
+            <div class="bg-white/70 backdrop-blur-sm rounded-lg p-4 shadow-sm border border-defensoria-100">
+                <p class="text-gray-700 text-sm">
+                    <i class="fas fa-info-circle text-defensoria-600 mr-2"></i>
+                    Ferramenta oficial para processamento e transcrição de mídias audiovisuais
+                </p>
+            </div>
+        </header>
 
-<div class="centered-columns">
-  <div style="flex:2; margin-right:12px;">
-    <div class="flex-center-container">
-      <div class="card">
-        <div class="card-title">
-          <i class="fas fa-cloud-upload-alt"></i> Upload de Vídeo
+        <!-- Main Container -->
+        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+            
+            <!-- Upload Form -->
+            <form id="uploadForm" enctype="multipart/form-data" class="space-y-6">
+                
+                <!-- Upload Area -->
+                <div class="upload-area" id="uploadArea">
+                    <div class="space-y-4">
+                        <div class="mx-auto w-16 h-16 bg-defensoria-100 rounded-full flex items-center justify-center">
+                            <i class="fas fa-cloud-upload-alt text-defensoria-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-lg font-medium text-gray-700 mb-2">
+                                Clique para selecionar ou arraste um arquivo aqui
+                            </p>
+                            <button type="button" 
+                                    class="btn-defensoria" 
+                                    onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-file-upload mr-2"></i>
+                                Selecionar Arquivo
+                            </button>
+                        </div>
+                    </div>
+                    <input type="file" id="fileInput" name="file" accept=".mp4,.mkv,.avi,.mov,.webm,.m4v,.mp3,.wav,.m4a" class="hidden" required>
+                </div>
+                
+                <!-- Supported Formats -->
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fas fa-file-audio text-blue-600"></i>
+                        <span class="font-semibold text-blue-800">Formatos Suportados:</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">MP4</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">MKV</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">AVI</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">MOV</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">WebM</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">M4V</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">MP3</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">WAV</span>
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">M4A</span>
+                    </div>
+                </div>
+                
+                <!-- File Info -->
+                <div id="fileInfo" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4 fade-in">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-file text-gray-500 text-xl"></i>
+                        <div id="fileInfoContent" class="text-gray-700"></div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div id="progress" class="hidden">
+                    <div class="flex justify-between text-sm font-medium text-gray-700 mb-2">
+                        <span>Processando arquivo...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                        <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Process Button -->
+                <button type="submit" 
+                        id="processBtn" 
+                        disabled 
+                        class="w-full btn-defensoria">
+                    <i class="fas fa-cogs mr-2"></i>
+                    <span id="processBtnText">Processar Arquivo</span>
+                </button>
+            </form>
+            
+            <!-- Status Messages -->
+            <div id="status" class="hidden mt-6 fade-in"></div>
+            
+            <!-- Results -->
+            <div id="results" class="hidden mt-8 fade-in">
+                <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                    <div id="resultsContent"></div>
+                </div>
+            </div>
+            
+            <!-- Actions Panel -->
+            <div id="actionsPanel" class="hidden mt-8 bg-gradient-to-r from-gray-50 to-defensoria-50 border border-defensoria-200 rounded-xl p-6 fade-in">
+                <div class="flex items-center gap-3 mb-6">
+                    <i class="fas fa-tools text-defensoria-700 text-xl"></i>
+                    <h3 class="text-xl font-bold text-defensoria-800">Ações Disponíveis</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button id="copyTranscriptionBtn" class="btn-secondary flex items-center justify-center gap-2">
+                        <i class="fas fa-copy"></i>
+                        Copiar Transcrição
+                    </button>
+                    
+                    <button id="downloadTranscriptionBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-all duration-200 transform hover:scale-105 flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i>
+                        Baixar Transcrição
+                    </button>
+                    
+                    <button id="sendToSolarBtn" class="btn-solar flex items-center justify-center gap-2">
+                        <i class="fas fa-rocket"></i>
+                        <span id="solarBtnText">Enviar para o SOLAR</span>
+                    </button>
+                </div>
+                
+                <div id="solarStatus" class="hidden mt-4 fade-in"></div>
+            </div>
         </div>
-      </div>
+        
+        <!-- Footer -->
+        <footer class="text-center mt-12 text-gray-600">
+            <div class="bg-white/50 backdrop-blur-sm rounded-lg p-4 border border-gray-100">
+                <p class="text-sm">
+                    <i class="fas fa-shield-alt text-defensoria-600 mr-2"></i>
+                    Sistema oficial da Defensoria Pública do Distrito Federal
+                </p>
+                <p class="text-xs mt-1 text-gray-500">
+                    Processamento seguro e confidencial de arquivos audiovisuais
+                </p>
+            </div>
+        </footer>
     </div>
 
-    <div class="flex-center-container">
-      <div class="upload-area">
-        <form id="uploadForm">
-          <input type="file" id="videoFile" name="file" accept=".mp4,.mkv,.avi,.mov"/>
-          <p style="margin-top:10px;color:#718096;">Tamanho máximo recomendado: 500MB</p>
-          <button type="submit" class="btn-primary" style="margin-top:12px;">🚀 Extrair Áudio e Enviar</button>
-        </form>
-      </div>
-    </div>
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileInfoContent = document.getElementById('fileInfoContent');
+        const processBtn = document.getElementById('processBtn');
+        const processBtnText = document.getElementById('processBtnText');
+        const status = document.getElementById('status');
+        const results = document.getElementById('results');
+        const resultsContent = document.getElementById('resultsContent');
+        const progress = document.getElementById('progress');
+        const progressBar = document.getElementById('progressBar');
+        const progressPercent = document.getElementById('progressPercent');
+        const uploadForm = document.getElementById('uploadForm');
+        const actionsPanel = document.getElementById('actionsPanel');
+        const sendToSolarBtn = document.getElementById('sendToSolarBtn');
+        const solarBtnText = document.getElementById('solarBtnText');
+        const copyTranscriptionBtn = document.getElementById('copyTranscriptionBtn');
+        const downloadTranscriptionBtn = document.getElementById('downloadTranscriptionBtn');
+        const solarStatus = document.getElementById('solarStatus');
 
-    <div class="flex-center-container" id="previewContainer" style="display:none;">
-      <div class="video-container">
-        <div class="card-title">
-          <i class="fas fa-play-circle"></i> Preview do Vídeo
-        </div>
-        <video id="videoPreview" controls style="width:100%;max-height:420px;border-radius:12px;"></video>
-      </div>
-    </div>
+        let currentTranscription = [];
 
-    <div id="progressArea"></div>
+        // Drag and drop functionality
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
 
-    <div class="flex-center-container" id="enviarSolarContainer" style="display:none;">
-      <div style="display:flex;justify-content:center;width:100%;">
-        <button id="btnEnviarSolar" class="btn-primary">🚀 Enviar para o SOLAR</button>
-      </div>
-    </div>
-  </div>
+        uploadArea.addEventListener('dragleave', (e) => {
+            if (!uploadArea.contains(e.relatedTarget)) {
+                uploadArea.classList.remove('dragover');
+            }
+        });
 
-  <div style="flex:1;">
-    <div class="flex-center-container" id="statsBox" style="display:none;">
-      <div class="stats-container">
-        <div class="stat-card">
-          <div class="stat-value" id="fileSize">0</div>
-          <div class="stat-label">MB</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="fileFormat">MP4</div>
-          <div class="stat-label">Formato</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
 
-<div id="chatHeader" class="flex-center-container" style="display:none;">
-  <div class="card">
-    <div class="card-title">
-      <i class="fas fa-comments"></i> Transcrição (Chat)
-    </div>
-  </div>
-</div>
+        // File selection
+        fileInput.addEventListener('change', handleFileSelect);
 
-<div class="flex-center-container" id="statsTranscricao" style="display:none;">
-  <div class="stats-container">
-    <div class="stat-card">
-      <div class="stat-value" id="numMensagens">0</div>
-      <div class="stat-label">Mensagens</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" id="numParticipantes">0</div>
-      <div class="stat-label">Participantes</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value" id="numPalavras">0</div>
-      <div class="stat-label">Palavras</div>
-    </div>
-  </div>
-</div>
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                const size = (file.size / (1024 * 1024)).toFixed(2);
+                const fileType = file.type || 'Tipo desconhecido';
+                
+                fileInfoContent.innerHTML = `
+                    <div>
+                        <p class="font-semibold text-gray-800 mb-1">📄 Arquivo selecionado:</p>
+                        <p class="text-sm text-gray-600"><strong>Nome:</strong> ${file.name}</p>
+                        <p class="text-sm text-gray-600"><strong>Tamanho:</strong> ${size} MB</p>
+                        <p class="text-sm text-gray-600"><strong>Tipo:</strong> ${fileType}</p>
+                    </div>
+                `;
+                
+                fileInfo.classList.remove('hidden');
+                processBtn.disabled = false;
+            }
+        }
 
-<div class="flex-center-container" id="chatContainer" style="display:none;">
-  <div class="chat-container" id="chatMessages"></div>
-</div>
+        // Form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const file = fileInput.files[0];
+            if (!file) {
+                showStatus('⚠️ Selecione um arquivo primeiro!', 'warning');
+                return;
+            }
 
-<script>
-  const uploadForm = document.getElementById("uploadForm");
-  const videoInput = document.getElementById("videoFile");
-  const progressArea = document.getElementById("progressArea");
-  const previewContainer = document.getElementById("previewContainer");
-  const statsBox = document.getElementById("statsBox");
-  const fileSizeEl = document.getElementById("fileSize");
-  const fileFormatEl = document.getElementById("fileFormat");
-  const videoPreview = document.getElementById("videoPreview");
-  const chatHeader = document.getElementById("chatHeader");
-  const chatContainer = document.getElementById("chatContainer");
-  const chatMessages = document.getElementById("chatMessages");
-  const statsTranscricao = document.getElementById("statsTranscricao");
-  const numMensagens = document.getElementById("numMensagens");
-  const numParticipantes = document.getElementById("numParticipantes");
-  const numPalavras = document.getElementById("numPalavras");
-  const enviarSolarContainer = document.getElementById("enviarSolarContainer");
-  const btnEnviarSolar = document.getElementById("btnEnviarSolar");
+            // Update UI for processing
+            processBtn.disabled = true;
+            processBtnText.textContent = 'Processando...';
+            
+            progress.classList.remove('hidden');
+            showStatus('⏳ Processando arquivo, aguarde...', 'info');
+            results.classList.add('hidden');
+            actionsPanel.classList.add('hidden');
+            currentTranscription = [];
 
-  let utterancesMem = [];
+            // Simulate progress
+            let progressValue = 0;
+            const progressInterval = setInterval(() => {
+                progressValue += Math.random() * 8;
+                if (progressValue > 90) progressValue = 90;
+                progressBar.style.width = progressValue + '%';
+                progressPercent.textContent = Math.round(progressValue) + '%';
+            }, 500);
 
-  function showProcessing(message) {
-    progressArea.innerHTML = `
-      <div class="flex-center-container">
-        <div class="card">
-          <div class="card-title">
-            <i class="fas fa-cogs"></i> Processando...
-          </div>
-          <div class="custom-progress"></div>
-          <p style="text-align:center; margin-top:1rem;">
-            <span class="loading-spinner"></span> ${message}
-          </p>
-        </div>
-      </div>`;
-  }
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
 
-  function showSuccess(message) {
-    progressArea.innerHTML = `
-      <div class="flex-center-container">
-        <div class="custom-success">
-          <i class="fas fa-check-circle"></i> ${message}
-        </div>
-      </div>`;
-  }
+                const response = await fetch('/processar', {
+                    method: 'POST',
+                    body: formData
+                });
 
-  function showError(message) {
-    progressArea.innerHTML = `
-      <div class="flex-center-container">
-        <div class="custom-error">
-          <i class="fas fa-times-circle"></i> ${message}
-        </div>
-      </div>`;
-  }
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
 
-  function showWarning(message) {
-    progressArea.innerHTML = `
-      <div class="flex-center-container">
-        <div class="custom-warning">
-          <i class="fas fa-exclamation-triangle"></i> ${message}
-        </div>
-      </div>`;
-  }
+                const result = await response.json();
 
-  videoInput.addEventListener("change", () => {
-    const f = videoInput.files && videoInput.files;
-    if (!f) return;
-    fileSizeEl.textContent = (f.size / (1024*1024)).toFixed(1);
-    const ext = f.name.split(".").pop().toUpperCase();
-    fileFormatEl.textContent = ext;
-    statsBox.style.display = "block";
+                if (response.ok && result.success) {
+                    showStatus('✅ Processamento concluído com sucesso!', 'success');
+                    displayResults(result);
+                    currentTranscription = result.utterances || [];
+                    if (currentTranscription.length > 0) {
+                        actionsPanel.classList.remove('hidden');
+                    }
+                } else {
+                    let errorMessage = `❌ Erro: ${result.error}`;
+                    if (result.solution) {
+                        errorMessage += `<br><br><strong>💡 Solução:</strong> ${result.solution}`;
+                    }
+                    if (result.install_commands) {
+                        errorMessage += '<br><br><strong>🔧 Comandos de instalação:</strong><br>';
+                        Object.entries(result.install_commands).forEach(([os, cmd]) => {
+                            errorMessage += `<strong>${os}:</strong> <code class="bg-gray-100 px-2 py-1 rounded">${cmd}</code><br>`;
+                        });
+                    }
+                    showStatus(errorMessage, 'error');
+                }
+            } catch (error) {
+                clearInterval(progressInterval);
+                showStatus(`❌ Erro de comunicação: ${error.message}`, 'error');
+            } finally {
+                // Reset UI
+                processBtn.disabled = false;
+                processBtnText.textContent = 'Processar Arquivo';
+                
+                setTimeout(() => {
+                    progress.classList.add('hidden');
+                    progressBar.style.width = '0%';
+                    progressPercent.textContent = '0%';
+                }, 3000);
+            }
+        });
 
-    // preview
-    const url = URL.createObjectURL(f);
-    videoPreview.src = url;
-    previewContainer.style.display = "block";
-  });
+        // Send to SOLAR
+        sendToSolarBtn.addEventListener('click', async () => {
+            if (!currentTranscription || currentTranscription.length === 0) {
+                showSolarStatus('❌ Nenhuma transcrição disponível para enviar', 'error');
+                return;
+            }
 
-  uploadForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const f = videoInput.files && videoInput.files;
-    if (!f) {
-      showWarning("Selecione um vídeo antes de enviar.");
-      return;
-    }
+            sendToSolarBtn.disabled = true;
+            solarBtnText.textContent = 'Enviando...';
+            sendToSolarBtn.classList.add('opacity-75');
+            showSolarStatus('📤 Enviando transcrição para o SOLAR...', 'info');
 
-    showProcessing("Extraindo áudio do vídeo...");
-    const formData = new FormData();
-    formData.append("file", f);
+            try {
+                const response = await fetch('/enviar_solar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        transcricao: currentTranscription
+                    })
+                });
 
-    try {
-      // 1) extrair e enviar ao n8n
-      const resp = await fetch("/processar", {
-        method: "POST",
-        body: formData
-      });
+                const result = await response.json();
 
-      if (!resp.ok) {
-        const txt = await resp.text();
-        showError("Erro ao processar vídeo: " + resp.status + " " + txt);
-        return;
-      }
+                if (response.ok && result.ok) {
+                    showSolarStatus('✅ Transcrição enviada para o SOLAR com sucesso!', 'success');
+                } else {
+                    showSolarStatus(`❌ Erro ao enviar para o SOLAR: ${result.error || 'Erro desconhecido'}`, 'error');
+                }
+            } catch (error) {
+                showSolarStatus(`❌ Erro de comunicação: ${error.message}`, 'error');
+            } finally {
+                sendToSolarBtn.disabled = false;
+                solarBtnText.textContent = 'Enviar para o SOLAR';
+                sendToSolarBtn.classList.remove('opacity-75');
+            }
+        });
 
-      const data = await resp.json();
-      const utterances = data.utterances || [];
-      if (!utterances.length) {
-        showWarning("Nenhuma transcrição encontrada.");
-        utterancesMem = [];
-        enviarSolarContainer.style.display = "none";
-        chatHeader.style.display = "none";
-        chatContainer.style.display = "none";
-        statsTranscricao.style.display = "none";
-        return;
-      }
+        // Copy transcription
+        copyTranscriptionBtn.addEventListener('click', () => {
+            if (!currentTranscription || currentTranscription.length === 0) {
+                showSolarStatus('❌ Nenhuma transcrição disponível para copiar', 'error');
+                return;
+            }
 
-      utterancesMem = utterances.slice();
+            const text = currentTranscription.map(utterance => 
+                `${utterance.speaker || 'Speaker'}: ${utterance.text}`
+            ).join('\n\n');
 
-      showSuccess("Áudio enviado e processado com sucesso!");
+            navigator.clipboard.writeText(text).then(() => {
+                showSolarStatus('📋 Transcrição copiada para a área de transferência!', 'success');
+            }).catch(() => {
+                showSolarStatus('❌ Erro ao copiar transcrição', 'error');
+            });
+        });
 
-      // 2) exibir chat e estatísticas
-      chatHeader.style.display = "block";
-      chatContainer.style.display = "block";
-      statsTranscricao.style.display = "block";
-      enviarSolarContainer.style.display = "block";
+        // Download transcription
+        downloadTranscriptionBtn.addEventListener('click', () => {
+            if (!currentTranscription || currentTranscription.length === 0) {
+                showSolarStatus('❌ Nenhuma transcrição disponível para baixar', 'error');
+                return;
+            }
 
-      // stats
-      numMensagens.textContent = utterancesMem.length.toString();
-      const speakersSet = new Set(utterancesMem.map(u => u.speaker));
-      numParticipantes.textContent = speakersSet.size.toString();
-      const palavras = utterancesMem.reduce((acc,u)=> acc + (u.text || "").trim().split(/\s+/).filter(Boolean).length, 0);
-      numPalavras.textContent = palavras.toString();
+            const text = currentTranscription.map(utterance => {
+                const start = formatTime(utterance.start);
+                const end = formatTime(utterance.end);
+                return `[${start} - ${end}] ${utterance.speaker || 'Speaker'}: ${utterance.text}`;
+            }).join('\n\n');
 
-      // cores fixas por speaker
-      const colors = ["#0e258d","#764ba2","#4facfe","#43e97b","#fa709a","#a8edea","#ff9a9e"];
-      const speakerList = Array.from(speakersSet).sort();
-      const colorMap = {};
-      speakerList.forEach((sp, i)=> colorMap[sp] = colors[i % colors.length]);
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcricao_defensoria_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
 
-      // mensagens
-      chatMessages.innerHTML = "";
-      utterancesMem.forEach(u => {
-        const icon = u.speaker === "SPEAKER_00" ? "fas fa-user" : (u.speaker === "SPEAKER_01" ? "fas fa-user-tie" : "fas fa-user-circle");
-        const color = colorMap[u.speaker] || "#0e258d";
-        const div = document.createElement("div");
-        div.className = "chat-message";
-        div.style.background = color;
-        div.style.color = "white";
-        div.innerHTML = `
-          <div class="speaker-label">
-            <i class="${icon}"></i> ${u.speaker}
-          </div>
-          <div class="message-text">${(u.text || "").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>
-        `;
-        chatMessages.appendChild(div);
-      });
+            showSolarStatus('💾 Transcrição baixada com sucesso!', 'success');
+        });
 
-    } catch(err) {
-      showError("Erro no processamento: " + err);
-    }
-  });
+        // Status display functions
+        function showStatus(message, type) {
+            const statusClasses = {
+                'success': 'status-success',
+                'error': 'status-error',
+                'warning': 'status-warning',
+                'info': 'status-info'
+            };
 
-  btnEnviarSolar.addEventListener("click", async () => {
-    if (!utterancesMem.length) {
-      showWarning("Nenhuma transcrição para enviar.");
-      return;
-    }
+            status.className = `mt-6 fade-in ${statusClasses[type] || statusClasses.info}`;
+            status.innerHTML = message;
+            status.classList.remove('hidden');
+        }
 
-    progressArea.innerHTML = `
-      <div class="flex-center-container">
-        <div class="card">
-          <div class="card-title">
-            <i class="fas fa-paper-plane"></i> Enviando...
-          </div>
-          <p style="text-align:center;">
-            <span class="loading-spinner"></span> Enviando transcrição para o SOLAR...
-          </p>
-        </div>
-      </div>
-    `;
+        function showSolarStatus(message, type) {
+            const statusClasses = {
+                'success': 'status-success',
+                'error': 'status-error',
+                'warning': 'status-warning',
+                'info': 'status-info'
+            };
 
-    const finalTranscricao = utterancesMem.map(u => ({speaker: u.speaker, text: u.text}));
+            solarStatus.className = `mt-4 fade-in ${statusClasses[type] || statusClasses.info}`;
+            solarStatus.innerHTML = message;
+            solarStatus.classList.remove('hidden');
+        }
 
-    try {
-      const resp = await fetch("/enviar_solar", {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({transcricao: finalTranscricao})
-      });
-      const data = await resp.json();
-      if (resp.ok && data.ok) {
-        showSuccess("Transcrição enviada com sucesso!");
-      } else {
-        showError("Erro ao enviar transcrição: " + (data.status || resp.status));
-      }
-    } catch(err) {
-      showError("Erro ao enviar transcrição: " + err);
-    }
-  });
-</script>
-{% endblock %}
+        // Display results
+        function displayResults(result) {
+            if (result.utterances && result.utterances.length > 0) {
+                let html = `
+                    <div class="flex items-center gap-3 mb-6">
+                        <i class="fas fa-file-alt text-defensoria-700 text-2xl"></i>
+                        <h3 class="text-xl font-bold text-defensoria-800">
+                            📝 Transcrição (${result.utterances.length} falas)
+                        </h3>
+                    </div>
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                `;
+                
+                result.utterances.forEach((utterance, index) => {
+                    html += `
+                        <div class="utterance">
+                            <div class="flex items-center gap-2 mb-2">
+                                <i class="fas fa-user-circle text-defensoria-600"></i>
+                                <span class="speaker">
+                                    ${utterance.speaker || 'Speaker ' + (index + 1)}
+                                </span>
+                                <span class="timestamp ml-auto">
+                                    ⏰ ${formatTime(utterance.start)} - ${formatTime(utterance.end)}
+                                </span>
+                            </div>
+                            <p class="text-gray-800 leading-relaxed">${utterance.text}</p>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                resultsContent.innerHTML = html;
+            } else {
+                resultsContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-search text-gray-400 text-4xl mb-4"></i>
+                        <p class="text-gray-600">❓ Nenhuma fala foi detectada no arquivo.</p>
+                    </div>
+                `;
+            }
+            
+            results.classList.remove('hidden');
+        }
+
+        // Format time helper
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+    </script>
+</body>
+</html>

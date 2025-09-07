@@ -1,0 +1,12 @@
+{
+  "name": "defensoria-app",
+  "version": "1.0.0",
+  "description": "Sistema de Transcrição - Defensoria Pública DF",
+  "main": "index.js",
+  "scripts": {
+    "build-css": "npx tailwindcss -i ./static/css/tw.dev.css -o ./static/css/tw.css --watch --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}
