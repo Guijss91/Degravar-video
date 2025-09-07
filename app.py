@@ -1,133 +1,95 @@
-from flask import Flask, render_template, request, jsonify, session
-import subprocess
-import tempfile
-import requests
 import os
-from werkzeug.utils import secure_filename
-import uuid
+import tempfile
+import subprocess
+from flask import Flask, render_template, request, jsonify, send_file
+import requests
 
-app = Flask(__name__)
-app.secret_key = 'defensoria_publica_transcricao_2025'  # Altere para uma chave mais segura em produção
-
-# URLs do n8n
+# Config
 N8N_WEBHOOK_URL_AUDIO = "https://laboratorio-n8n.nu7ixt.easypanel.host/webhook/audio"
 N8N_WEBHOOK_URL_TRANSCRICAO = "https://laboratorio-n8n.nu7ixt.easypanel.host/webhook/trancricao"
 
-# Configurações de upload
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'mp4', 'mkv', 'avi', 'mov'}
-MAX_FILE_SIZE = 500 * 1024 * 1024  # 500MB
+app = Flask(__name__, static_folder="static", template_folder="templates")
+app.config["MAX_CONTENT_LENGTH"] = 1024 * 1024 * 1024  # 1GB
+ALLOWED_EXTENSIONS = {"mp4", "mkv", "avi", "mov"}
 
-# Criar pasta de uploads se não existir
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+def allowed_file(filename: str) -> bool:
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS  # [12][9]
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-@app.route('/')
+@app.route("/", methods=["GET"])
 def index():
-    return render_template('index.html')
+    return render_template("index.html")  # [12]
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'video_file' not in request.files:
-        return jsonify({'error': 'Nenhum arquivo foi enviado'}), 400
-    
-    file = request.files['video_file']
-    
-    if file.filename == '':
-        return jsonify({'error': 'Nenhum arquivo selecionado'}), 400
-    
+@app.route("/processar", methods=["POST"])
+def processar():
+    """
+    Recebe vídeo, extrai áudio via ffmpeg, envia áudio ao n8n e retorna utterances.
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "Arquivo não enviado (campo file)."}), 400  # [12][18]
+
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "Nome de arquivo vazio."}), 400  # [12]
+
     if not allowed_file(file.filename):
-        return jsonify({'error': 'Formato de arquivo não suportado'}), 400
-    
-    # Verificar tamanho do arquivo
-    file.seek(0, os.SEEK_END)
-    file_size = file.tell()
-    file.seek(0)
-    
-    if file_size > MAX_FILE_SIZE:
-        return jsonify({'error': 'Arquivo muito grande. Máximo: 500MB'}), 400
-    
+        return jsonify({"error": "Formato não suportado."}), 400  # [12]
+
+    # Salvar vídeo temporário e extrair áudio com ffmpeg
+    tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix="."+file.filename.rsplit(".",1)[1].lower())
+    tmp_video_path = tmp_video.name
+    file.save(tmp_video_path)  # [12][9]
+
+    tmp_audio_path = tmp_video_path.rsplit(".",1) + ".mp3"
+
     try:
-        # Salvar arquivo temporário
-        filename = secure_filename(file.filename)
-        unique_filename = f"{uuid.uuid4()}_{filename}"
-        file_path = os.path.join(UPLOAD_FOLDER, unique_filename)
-        file.save(file_path)
-        
-        # Extrair áudio
-        audio_path = file_path.replace(os.path.splitext(file_path)[1], '.mp3')
-        
-        subprocess.run([
-            "ffmpeg", "-i", file_path, "-q:a", "0", "-map", "a", audio_path, "-y"
-        ], check=True)
-        
-        # Enviar para n8n
-        with open(audio_path, "rb") as f:
-            files = {"file": (os.path.basename(audio_path), f, "audio/mpeg")}
-            data = {"video_filename": filename}
-            response = requests.post(N8N_WEBHOOK_URL_AUDIO, files=files, data=data)
-        
-        if response.status_code == 200:
-            result = response.json()
-            utterances = result[0].get("utterances", [])
-            
-            if utterances:
-                # Armazenar na sessão
-                session['utterances'] = utterances
-                session['video_filename'] = filename
-                session['file_size'] = file_size
-                
-                return jsonify({
-                    'success': True,
-                    'message': 'Áudio processado com sucesso!',
-                    'utterances': utterances,
-                    'stats': {
-                        'messages': len(utterances),
-                        'speakers': len(set(u['speaker'] for u in utterances)),
-                        'words': sum(len(u['text'].split()) for u in utterances)
-                    }
-                })
-            else:
-                return jsonify({'error': 'Nenhuma transcrição encontrada'}), 400
-        else:
-            return jsonify({'error': f'Erro no servidor: {response.status_code}'}), 500
-            
-    except subprocess.CalledProcessError:
-        return jsonify({'error': 'Erro ao extrair áudio do vídeo'}), 500
+        # ffmpeg -i input -q:a 0 -map a output.mp3
+        subprocess.run(
+            ["ffmpeg", "-i", tmp_video_path, "-q:a", "0", "-map", "a", tmp_audio_path, "-y"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )  # [10][7][19]
+
+        # Enviar áudio ao n8n
+        with open(tmp_audio_path, "rb") as f:
+            files = {"file": (os.path.basename(tmp_audio_path), f, "audio/mpeg")}
+            data = {"video_filename": file.filename}
+            r = requests.post(N8N_WEBHOOK_URL_AUDIO, files=files, data=data, timeout=120)  # [6][9]
+
+        if r.status_code != 200:
+            return jsonify({"error": f"Erro no n8n audio: {r.status_code}", "body": r.text}), 502  # [6]
+
+        result = r.json()
+        utterances = result.get("utterances", []) if isinstance(result, list) and result else []  # [6][9]
+        return jsonify({"utterances": utterances})  # [12]
+
+    except subprocess.CalledProcessError as e:
+        return jsonify({"error": "Falha na conversão ffmpeg", "stderr": e.stderr.decode(errors="ignore")}), 500  # [19][10]
     except Exception as e:
-        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+        return jsonify({"error": str(e)}), 500  # [12]
     finally:
-        # Limpar arquivos temporários
-        if os.path.exists(file_path):
-            os.remove(file_path)
-        if os.path.exists(audio_path):
-            os.remove(audio_path)
+        try:
+            if os.path.exists(tmp_video_path):
+                os.remove(tmp_video_path)
+            if os.path.exists(tmp_audio_path):
+                os.remove(tmp_audio_path)
+        except Exception:
+            pass  # [12]
 
-@app.route('/send_transcription', methods=['POST'])
-def send_transcription():
-    if 'utterances' not in session:
-        return jsonify({'error': 'Nenhuma transcrição disponível'}), 400
-    
+@app.route("/enviar_solar", methods=["POST"])
+def enviar_solar():
+    """
+    Recebe JSON com transcricao e envia ao n8n de transcrição final.
+    """
+    payload = request.get_json(silent=True) or {}
+    transcricao = payload.get("transcricao", [])
     try:
-        utterances = session['utterances']
-        final_transcricao = [{"speaker": u['speaker'], "text": u['text']} for u in utterances]
-        
-        response = requests.post(N8N_WEBHOOK_URL_TRANSCRICAO, json={"transcricao": final_transcricao})
-        
-        if response.status_code == 200:
-            return jsonify({'success': True, 'message': 'Transcrição enviada com sucesso!'})
-        else:
-            return jsonify({'error': f'Erro ao enviar transcrição: {response.status_code}'}), 500
-            
+        r = requests.post(N8N_WEBHOOK_URL_TRANSCRICAO, json={"transcricao": transcricao}, timeout=120)  # [6]
+        if r.status_code == 200:
+            return jsonify({"ok": True})
+        return jsonify({"ok": False, "status": r.status_code, "body": r.text}), 502
     except Exception as e:
-        return jsonify({'error': f'Erro interno: {str(e)}'}), 500
+        return jsonify({"ok": False, "error": str(e)}), 500  # [6][12]
 
-@app.route('/clear_session', methods=['POST'])
-def clear_session():
-    session.clear()
-    return jsonify({'success': True, 'message': 'Sessão limpa com sucesso!'})
-
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)), debug=False)  # [12]

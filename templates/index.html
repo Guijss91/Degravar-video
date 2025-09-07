@@ -1,1315 +1,295 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Transcrição - Defensoria Pública de Brasília</title>
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <style>
-        :root {
-            --dp-verde: #1B5E20;
-            --dp-verde-light: #2E7D32;
-            --dp-verde-dark: #0D4E14;
-            --dp-azul: #0D47A1;
-            --dp-azul-light: #1565C0;
-            --dp-ouro: #FFB300;
-            --dp-ouro-light: #FFC107;
-            --background-primary: #F8FAFF;
-            --background-secondary: #FFFFFF;
-            --background-accent: linear-gradient(135deg, #1B5E20 0%, #0D47A1 100%);
-            --text-primary: #1A202C;
-            --text-secondary: #4A5568;
-            --text-light: #718096;
-            --border-color: #E2E8F0;
-            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.05);
-            --shadow-medium: 0 8px 24px rgba(0, 0, 0, 0.1);
-            --shadow-heavy: 0 16px 40px rgba(0, 0, 0, 0.15);
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--background-primary);
-            color: var(--text-primary);
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        /* Header Institucional */
-        .institutional-header {
-            background: var(--background-accent);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: var(--shadow-medium);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .institutional-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/><circle cx="25" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-            pointer-events: none;
-        }
-
-        .institutional-content {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .logo-brasilia {
-            width: 50px;
-            height: 50px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: var(--dp-verde);
-            font-weight: bold;
-        }
-
-        .institutional-text h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .institutional-text p {
-            opacity: 0.9;
-            font-weight: 400;
-        }
-
-        /* Container Principal */
-        .main-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 3rem 2rem;
-            min-height: calc(100vh - 120px);
-        }
-
-        .app-title {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .app-title h2 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--dp-verde);
-            margin-bottom: 0.5rem;
-            font-family: 'Poppins', sans-serif;
-            position: relative;
-        }
-
-        .app-title p {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        /* Layout em Grid */
-        .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        /* Cards */
-        .card {
-            background: var(--background-secondary);
-            border-radius: var(--radius-lg);
-            padding: 2rem;
-            box-shadow: var(--shadow-light);
-            border: 1px solid var(--border-color);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--background-accent);
-        }
-
-        .card:hover {
-            box-shadow: var(--shadow-medium);
-            transform: translateY(-2px);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .card-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .card-icon {
-            width: 40px;
-            height: 40px;
-            background: var(--background-accent);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.1rem;
-        }
-
-        /* Upload Area */
-        .upload-container {
-            position: relative;
-        }
-
-        .upload-area {
-            border: 2px dashed var(--dp-azul);
-            border-radius: var(--radius-lg);
-            padding: 3rem 2rem;
-            text-align: center;
-            background: linear-gradient(135deg, rgba(13, 71, 161, 0.03) 0%, rgba(27, 94, 32, 0.03) 100%);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .upload-area::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            transform: rotate(45deg);
-            transition: all 0.6s;
-            opacity: 0;
-        }
-
-        .upload-area:hover::before {
-            animation: shimmer 1.5s ease-in-out;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
-            50% { opacity: 1; }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
-        }
-
-        .upload-area:hover {
-            border-color: var(--dp-verde);
-            background: linear-gradient(135deg, rgba(27, 94, 32, 0.08) 0%, rgba(13, 71, 161, 0.08) 100%);
-            transform: scale(1.02);
-        }
-
-        .upload-icon {
-            font-size: 3rem;
-            color: var(--dp-azul);
-            margin-bottom: 1rem;
-            transition: all 0.3s ease;
-        }
-
-        .upload-area:hover .upload-icon {
-            color: var(--dp-verde);
-            transform: scale(1.1);
-        }
-
-        .upload-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 0.5rem;
-        }
-
-        .upload-hint {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        /* File Input Hidden */
-        #video_file {
-            display: none;
-        }
-
-        /* Botões */
-        .btn {
-            background: var(--background-accent);
-            color: white;
-            border: none;
-            padding: 0.875rem 2rem;
-            border-radius: var(--radius-md);
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            box-shadow: var(--shadow-light);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
-
-        .btn:hover::before {
-            left: 100%;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-medium);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn:disabled {
-            background: var(--text-light);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: var(--shadow-light);
-        }
-
-        .btn-secondary {
-            background: var(--dp-ouro);
-            color: var(--text-primary);
-        }
-
-        .btn-danger {
-            background: #E53E3E;
-        }
-
-        /* Video Preview */
-        .video-preview {
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-medium);
-            margin: 1rem 0;
-        }
-
-        .video-preview video {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
-        }
-
-        .stat-card {
-            background: var(--background-secondary);
-            border-radius: var(--radius-md);
-            padding: 1.5rem 1rem;
-            text-align: center;
-            border: 1px solid var(--border-color);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--background-accent);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-medium);
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--dp-verde);
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .stat-label {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 500;
-        }
-
-        /* Chat Container */
-        .chat-container {
-            background: var(--background-secondary);
-            border-radius: var(--radius-lg);
-            padding: 2rem;
-            max-height: 600px;
-            overflow-y: auto;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-light);
-        }
-
-        .chat-message {
-            margin: 1rem 0;
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius-md);
-            position: relative;
-            animation: slideIn 0.3s ease;
-            box-shadow: var(--shadow-light);
-            border-left: 4px solid;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .speaker-label {
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .message-text {
-            font-size: 1rem;
-            line-height: 1.6;
-            color: var(--text-primary);
-        }
-
-        /* Cores dos speakers */
-        .speaker-0 {
-            background: linear-gradient(135deg, #E8F5E8, #F1F8E9);
-            border-left-color: var(--dp-verde);
-        }
-
-        .speaker-0 .speaker-label {
-            color: var(--dp-verde);
-        }
-
-        .speaker-1 {
-            background: linear-gradient(135deg, #E3F2FD, #F0F7FF);
-            border-left-color: var(--dp-azul);
-        }
-
-        .speaker-1 .speaker-label {
-            color: var(--dp-azul);
-        }
-
-        .speaker-2 {
-            background: linear-gradient(135deg, #FFF8E1, #FFFBF0);
-            border-left-color: var(--dp-ouro);
-        }
-
-        .speaker-2 .speaker-label {
-            color: #F57C00;
-        }
-
-        /* Alerts */
-        .alert {
-            padding: 1rem 1.5rem;
-            border-radius: var(--radius-md);
-            margin: 1rem 0;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-weight: 500;
-            animation: slideDown 0.4s ease;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .alert-success {
-            background: linear-gradient(135deg, #D4EDDA, #E8F5E9);
-            color: #155724;
-            border-left: 4px solid #28A745;
-        }
-
-        .alert-error {
-            background: linear-gradient(135deg, #F8D7DA, #FADBD8);
-            color: #721C24;
-            border-left: 4px solid #DC3545;
-        }
-
-        .alert-warning {
-            background: linear-gradient(135deg, #FFF3CD, #FEF9E7);
-            color: #856404;
-            border-left: 4px solid #FFC107;
-        }
-
-        .alert-info {
-            background: linear-gradient(135deg, #CCE7FF, #E3F2FD);
-            color: #004085;
-            border-left: 4px solid #007BFF;
-        }
-
-        /* Loading States */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            padding: 2rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-
-        .spinner {
-            width: 24px;
-            height: 24px;
-            border: 3px solid var(--border-color);
-            border-top: 3px solid var(--dp-verde);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Progress Bar */
-        .progress-container {
-            background: var(--border-color);
-            border-radius: var(--radius-sm);
-            height: 8px;
-            overflow: hidden;
-            margin: 1rem 0;
-        }
-
-        .progress-bar {
-            height: 100%;
-            background: var(--background-accent);
-            border-radius: var(--radius-sm);
-            transition: width 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .progress-bar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-            animation: loading-shimmer 1.5s infinite;
-        }
-
-        @keyframes loading-shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        /* Sidebar Cards */
-        .sidebar-card {
-            background: var(--background-secondary);
-            border-radius: var(--radius-md);
-            padding: 1.5rem;
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-light);
-        }
-
-        .sidebar-card h4 {
-            color: var(--dp-verde);
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .format-list {
-            list-style: none;
-        }
-
-        .format-list li {
-            padding: 0.5rem 0;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border-bottom: 1px solid rgba(226, 232, 240, 0.5);
-        }
-
-        .format-list li:last-child {
-            border-bottom: none;
-        }
-
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #28A745;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
-        }
-
-        /* Responsividade */
-        @media (max-width: 1024px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-            }
-
-            .sidebar {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 1rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 2rem 1rem;
-            }
-
-            .institutional-content {
-                padding: 0 1rem;
-            }
-
-            .app-title h2 {
-                font-size: 2rem;
-            }
-
-            .card {
-                padding: 1.5rem;
-            }
-
-            .stats-grid {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            }
-        }
-
-        /* Estilo para o input de arquivo */
-        .file-input-wrapper {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-
-        /* Scrollbar personalizada */
-        .chat-container::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .chat-container::-webkit-scrollbar-track {
-            background: var(--border-color);
-            border-radius: var(--radius-sm);
-        }
-
-        .chat-container::-webkit-scrollbar-thumb {
-            background: var(--dp-verde);
-            border-radius: var(--radius-sm);
-        }
-
-        .chat-container::-webkit-scrollbar-thumb:hover {
-            background: var(--dp-verde-dark);
-        }
-
-        /* Hidden elements */
-        .hidden {
-            display: none !important;
-        }
-
-        /* Floating Action Buttons */
-        .fab-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            z-index: 1000;
-        }
-
-        .fab {
-            width: 56px;
-            height: 56px;
-            background: var(--background-accent);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 1.25rem;
-            cursor: pointer;
-            box-shadow: var(--shadow-medium);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .fab:hover {
-            transform: scale(1.1);
-            box-shadow: var(--shadow-heavy);
-        }
-
-        /* Tooltip */
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 120px;
-            background-color: var(--text-primary);
-            color: white;
-            text-align: center;
-            border-radius: var(--radius-sm);
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -60px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            font-size: 0.8rem;
-        }
-
-        .tooltip:hover .tooltiptext {
-            visibility: visible;
-            opacity: 1;
-        }
-    </style>
-</head>
-<body>
-    <!-- Header Institucional -->
-    <header class="institutional-header">
-        <div class="institutional-content">
-            <div class="logo-brasilia">
-                <i class="fas fa-balance-scale"></i>
-            </div>
-            <div class="institutional-text">
-                <h1>Defensoria Pública do Distrito Federal</h1>
-                <p>Sistema de Transcrição de Audiências e Depoimentos</p>
-            </div>
+{% extends "base.html" %}
+{% block content %}
+<div class="flex-center-container">
+  <div class="main-header">
+    <div class="main-title">
+      <i class="fas fa-video"></i> Transcrição Chat
+    </div>
+    <div class="main-subtitle">
+      Extraia áudio de vídeos e gere transcrições inteligentes
+    </div>
+  </div>
+</div>
+
+<div class="centered-columns">
+  <div style="flex:2; margin-right:12px;">
+    <div class="flex-center-container">
+      <div class="card">
+        <div class="card-title">
+          <i class="fas fa-cloud-upload-alt"></i> Upload de Vídeo
         </div>
-    </header>
-
-    <!-- Container Principal -->
-    <div class="main-container">
-        <!-- Título da Aplicação -->
-        <div class="app-title">
-            <h2><i class="fas fa-microphone-alt"></i> Transcrição Chat</h2>
-            <p>Extraia áudio de vídeos e gere transcrições inteligentes</p>
-        </div>
-
-        <!-- Layout Principal -->
-        <div class="content-grid">
-            <!-- Conteúdo Principal -->
-            <div class="main-content">
-                <!-- Card de Upload -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </div>
-                        <h3 class="card-title">Upload de Vídeo</h3>
-                    </div>
-                    
-                    <div class="upload-container">
-                        <div class="upload-area" onclick="document.getElementById('video_file').click()">
-                            <div class="upload-icon">
-                                <i class="fas fa-video"></i>
-                            </div>
-                            <div class="upload-text">Clique para selecionar ou arraste seu vídeo aqui</div>
-                            <div class="upload-hint">Formatos suportados: MP4, MKV, AVI, MOV (máx. 500MB)</div>
-                        </div>
-                        <input type="file" id="video_file" accept=".mp4,.mkv,.avi,.mov">
-                    </div>
-
-                    <!-- Informações do arquivo -->
-                    <div id="file-info" class="hidden">
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-value" id="file-size">0</div>
-                                <div class="stat-label">MB</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value" id="file-format">-</div>
-                                <div class="stat-label">Formato</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Preview do vídeo -->
-                    <div id="video-preview" class="hidden">
-                        <div class="video-preview">
-                            <video id="preview-video" controls></video>
-                        </div>
-                    </div>
-
-                    <!-- Botão de processamento -->
-                    <div id="upload-actions" class="hidden" style="text-align: center; margin-top: 1.5rem;">
-                        <button class="btn" id="process-btn">
-                            <i class="fas fa-cogs"></i> Extrair Áudio e Processar
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Loading State -->
-                <div id="loading-card" class="card hidden">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <span id="loading-text">Processando...</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- Resultados da Transcrição -->
-                <div id="transcription-results" class="hidden">
-                    <!-- Estatísticas -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-icon">
-                                <i class="fas fa-chart-bar"></i>
-                            </div>
-                            <h3 class="card-title">Estatísticas da Conversa</h3>
-                        </div>
-                        <div class="stats-grid">
-                            <div class="stat-card">
-                                <div class="stat-value" id="total-messages">0</div>
-                                <div class="stat-label">Mensagens</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value" id="total-speakers">0</div>
-                                <div class="stat-label">Participantes</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-value" id="total-words">0</div>
-                                <div class="stat-label">Palavras</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Chat -->
-                    <div class="card">
-                        <div class="card-header">
-                            <div class="card-icon">
-                                <i class="fas fa-comments"></i>
-                            </div>
-                            <h3 class="card-title">Transcrição</h3>
-                        </div>
-                        <div class="chat-container" id="chat-messages">
-                            <!-- Mensagens serão inseridas aqui via JavaScript -->
-                        </div>
-                    </div>
-
-                    <!-- Ações finais -->
-                    <div style="text-align: center; margin-top: 2rem;">
-                        <button class="btn btn-secondary" id="send-transcription-btn">
-                            <i class="fas fa-paper-plane"></i> Enviar para o SOLAR
-                        </button>
-                        <button class="btn btn-danger" id="clear-session-btn" style="margin-left: 1rem;">
-                            <i class="fas fa-trash"></i> Limpar Sessão
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sidebar -->
-            <div class="sidebar">
-                <!-- Formatos Suportados -->
-                <div class="sidebar-card">
-                    <h4><i class="fas fa-file-video"></i> Formatos Suportados</h4>
-                    <ul class="format-list">
-                        <li><i class="fas fa-circle" style="color: var(--dp-verde); font-size: 0.5rem;"></i> MP4 - Recomendado</li>
-                        <li><i class="fas fa-circle" style="color: var(--dp-azul); font-size: 0.5rem;"></i> MKV - Alta qualidade</li>
-                        <li><i class="fas fa-circle" style="color: var(--dp-ouro); font-size: 0.5rem;"></i> AVI - Compatível</li>
-                        <li><i class="fas fa-circle" style="color: #E53E3E; font-size: 0.5rem;"></i> MOV - Apple</li>
-                    </ul>
-                </div>
-
-                <!-- Status do Sistema -->
-                <div class="sidebar-card">
-                    <h4><i class="fas fa-server"></i> Status do Sistema</h4>
-                    <div style="margin-bottom: 0.75rem;">
-                        <span class="status-indicator"></span>
-                        <span style="margin-left: 0.5rem; font-weight: 500;">Servidor Online</span>
-                    </div>
-                    <div style="margin-bottom: 0.75rem;">
-                        <span class="status-indicator"></span>
-                        <span style="margin-left: 0.5rem; font-weight: 500;">API Disponível</span>
-                    </div>
-                    <div>
-                        <span class="status-indicator"></span>
-                        <span style="margin-left: 0.5rem; font-weight: 500;">Processamento Ativo</span>
-                    </div>
-                </div>
-
-                <!-- Informações Técnicas -->
-                <div class="sidebar-card">
-                    <h4><i class="fas fa-info-circle"></i> Informações</h4>
-                    <div style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
-                        <p><strong>Tamanho máximo:</strong> 500MB</p>
-                        <p><strong>Processamento:</strong> FFmpeg + IA</p>
-                        <p><strong>Qualidade:</strong> Automática</p>
-                        <p><strong>Privacidade:</strong> Dados seguros</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <!-- Floating Action Buttons -->
-    <div class="fab-container">
-        <div class="tooltip">
-            <button class="fab" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
-                <i class="fas fa-arrow-up"></i>
-            </button>
-            <span class="tooltiptext">Voltar ao topo</span>
-        </div>
+    <div class="flex-center-container">
+      <div class="upload-area">
+        <form id="uploadForm">
+          <input type="file" id="videoFile" name="file" accept=".mp4,.mkv,.avi,.mov"/>
+          <p style="margin-top:10px;color:#718096;">Tamanho máximo recomendado: 500MB</p>
+          <button type="submit" class="btn-primary" style="margin-top:12px;">🚀 Extrair Áudio e Enviar</button>
+        </form>
+      </div>
     </div>
 
-    <!-- Alert Container -->
-    <div id="alert-container" style="position: fixed; top: 1rem; right: 1rem; z-index: 1001; max-width: 400px;"></div>
+    <div class="flex-center-container" id="previewContainer" style="display:none;">
+      <div class="video-container">
+        <div class="card-title">
+          <i class="fas fa-play-circle"></i> Preview do Vídeo
+        </div>
+        <video id="videoPreview" controls style="width:100%;max-height:420px;border-radius:12px;"></video>
+      </div>
+    </div>
 
-    <script>
-        // Estado da aplicação
-        let currentUtterances = [];
-        let isProcessing = false;
+    <div id="progressArea"></div>
 
-        // Elementos DOM
-        const fileInput = document.getElementById('video_file');
-        const fileInfo = document.getElementById('file-info');
-        const videoPreview = document.getElementById('video-preview');
-        const previewVideo = document.getElementById('preview-video');
-        const uploadActions = document.getElementById('upload-actions');
-        const processBtn = document.getElementById('process-btn');
-        const loadingCard = document.getElementById('loading-card');
-        const transcriptionResults = document.getElementById('transcription-results');
-        const alertContainer = document.getElementById('alert-container');
+    <div class="flex-center-container" id="enviarSolarContainer" style="display:none;">
+      <div style="display:flex;justify-content:center;width:100%;">
+        <button id="btnEnviarSolar" class="btn-primary">🚀 Enviar para o SOLAR</button>
+      </div>
+    </div>
+  </div>
 
-        // Cores dos speakers
-        const speakerColors = {
-            'SPEAKER_00': { bg: 'speaker-0', color: 'var(--dp-verde)' },
-            'SPEAKER_01': { bg: 'speaker-1', color: 'var(--dp-azul)' },
-            'SPEAKER_02': { bg: 'speaker-2', color: '#F57C00' },
-            'SPEAKER_03': { bg: 'speaker-0', color: 'var(--dp-verde)' },
-            'SPEAKER_04': { bg: 'speaker-1', color: 'var(--dp-azul)' }
-        };
+  <div style="flex:1;">
+    <div class="flex-center-container" id="statsBox" style="display:none;">
+      <div class="stats-container">
+        <div class="stat-card">
+          <div class="stat-value" id="fileSize">0</div>
+          <div class="stat-label">MB</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="fileFormat">MP4</div>
+          <div class="stat-label">Formato</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        // Event Listeners
-        fileInput.addEventListener('change', handleFileSelect);
-        processBtn.addEventListener('click', processVideo);
-        document.getElementById('send-transcription-btn').addEventListener('click', sendTranscription);
-        document.getElementById('clear-session-btn').addEventListener('click', clearSession);
+<div id="chatHeader" class="flex-center-container" style="display:none;">
+  <div class="card">
+    <div class="card-title">
+      <i class="fas fa-comments"></i> Transcrição (Chat)
+    </div>
+  </div>
+</div>
 
-        // Função para mostrar alertas
-        function showAlert(message, type = 'info') {
-            const alertId = 'alert-' + Date.now();
-            const alertHTML = `
-                <div class="alert alert-${type}" id="${alertId}">
-                    <i class="fas fa-${getAlertIcon(type)}"></i>
-                    <span>${message}</span>
-                </div>
-            `;
-            
-            alertContainer.insertAdjacentHTML('beforeend', alertHTML);
-            
-            // Auto remove após 5 segundos
-            setTimeout(() => {
-                const alertElement = document.getElementById(alertId);
-                if (alertElement) {
-                    alertElement.style.animation = 'slideUp 0.3s ease forwards';
-                    setTimeout(() => alertElement.remove(), 300);
-                }
-            }, 5000);
-        }
+<div class="flex-center-container" id="statsTranscricao" style="display:none;">
+  <div class="stats-container">
+    <div class="stat-card">
+      <div class="stat-value" id="numMensagens">0</div>
+      <div class="stat-label">Mensagens</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="numParticipantes">0</div>
+      <div class="stat-label">Participantes</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="numPalavras">0</div>
+      <div class="stat-label">Palavras</div>
+    </div>
+  </div>
+</div>
 
-        function getAlertIcon(type) {
-            const icons = {
-                'success': 'check-circle',
-                'error': 'times-circle',
-                'warning': 'exclamation-triangle',
-                'info': 'info-circle'
-            };
-            return icons[type] || 'info-circle';
-        }
+<div class="flex-center-container" id="chatContainer" style="display:none;">
+  <div class="chat-container" id="chatMessages"></div>
+</div>
 
-        // Manipulação de arquivo
-        function handleFileSelect(event) {
-            const file = event.target.files[0];
-            if (!file) return;
+<script>
+  const uploadForm = document.getElementById("uploadForm");
+  const videoInput = document.getElementById("videoFile");
+  const progressArea = document.getElementById("progressArea");
+  const previewContainer = document.getElementById("previewContainer");
+  const statsBox = document.getElementById("statsBox");
+  const fileSizeEl = document.getElementById("fileSize");
+  const fileFormatEl = document.getElementById("fileFormat");
+  const videoPreview = document.getElementById("videoPreview");
+  const chatHeader = document.getElementById("chatHeader");
+  const chatContainer = document.getElementById("chatContainer");
+  const chatMessages = document.getElementById("chatMessages");
+  const statsTranscricao = document.getElementById("statsTranscricao");
+  const numMensagens = document.getElementById("numMensagens");
+  const numParticipantes = document.getElementById("numParticipantes");
+  const numPalavras = document.getElementById("numPalavras");
+  const enviarSolarContainer = document.getElementById("enviarSolarContainer");
+  const btnEnviarSolar = document.getElementById("btnEnviarSolar");
 
-            // Verificar tamanho
-            const fileSizeMB = file.size / (1024 * 1024);
-            if (fileSizeMB > 500) {
-                showAlert('Arquivo muito grande. Máximo permitido: 500MB', 'error');
-                fileInput.value = '';
-                return;
-            }
+  let utterancesMem = [];
 
-            // Atualizar informações do arquivo
-            document.getElementById('file-size').textContent = fileSizeMB.toFixed(1);
-            document.getElementById('file-format').textContent = file.name.split('.').pop().toUpperCase();
+  function showProcessing(message) {
+    progressArea.innerHTML = `
+      <div class="flex-center-container">
+        <div class="card">
+          <div class="card-title">
+            <i class="fas fa-cogs"></i> Processando...
+          </div>
+          <div class="custom-progress"></div>
+          <p style="text-align:center; margin-top:1rem;">
+            <span class="loading-spinner"></span> ${message}
+          </p>
+        </div>
+      </div>`;
+  }
 
-            // Mostrar preview
-            const url = URL.createObjectURL(file);
-            previewVideo.src = url;
-            
-            // Mostrar elementos
-            fileInfo.classList.remove('hidden');
-            videoPreview.classList.remove('hidden');
-            uploadActions.classList.remove('hidden');
-            
-            showAlert('Arquivo carregado com sucesso!', 'success');
-        }
+  function showSuccess(message) {
+    progressArea.innerHTML = `
+      <div class="flex-center-container">
+        <div class="custom-success">
+          <i class="fas fa-check-circle"></i> ${message}
+        </div>
+      </div>`;
+  }
 
-        // Processar vídeo
-        async function processVideo() {
-            if (isProcessing) return;
-            
-            const file = fileInput.files[0];
-            if (!file) {
-                showAlert('Selecione um arquivo primeiro', 'warning');
-                return;
-            }
+  function showError(message) {
+    progressArea.innerHTML = `
+      <div class="flex-center-container">
+        <div class="custom-error">
+          <i class="fas fa-times-circle"></i> ${message}
+        </div>
+      </div>`;
+  }
 
-            isProcessing = true;
-            processBtn.disabled = true;
-            
-            // Mostrar loading
-            loadingCard.classList.remove('hidden');
-            transcriptionResults.classList.add('hidden');
-            
-            // Simular progresso
-            simulateProgress();
+  function showWarning(message) {
+    progressArea.innerHTML = `
+      <div class="flex-center-container">
+        <div class="custom-warning">
+          <i class="fas fa-exclamation-triangle"></i> ${message}
+        </div>
+      </div>`;
+  }
 
-            try {
-                const formData = new FormData();
-                formData.append('video_file', file);
+  videoInput.addEventListener("change", () => {
+    const f = videoInput.files && videoInput.files;
+    if (!f) return;
+    fileSizeEl.textContent = (f.size / (1024*1024)).toFixed(1);
+    const ext = f.name.split(".").pop().toUpperCase();
+    fileFormatEl.textContent = ext;
+    statsBox.style.display = "block";
 
-                const response = await fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+    // preview
+    const url = URL.createObjectURL(f);
+    videoPreview.src = url;
+    previewContainer.style.display = "block";
+  });
 
-                const result = await response.json();
+  uploadForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const f = videoInput.files && videoInput.files;
+    if (!f) {
+      showWarning("Selecione um vídeo antes de enviar.");
+      return;
+    }
 
-                if (response.ok) {
-                    currentUtterances = result.utterances;
-                    displayTranscription(result);
-                    showAlert('Transcrição gerada com sucesso!', 'success');
-                } else {
-                    showAlert(result.error || 'Erro ao processar arquivo', 'error');
-                }
-            } catch (error) {
-                showAlert('Erro de conexão com o servidor', 'error');
-                console.error('Error:', error);
-            } finally {
-                isProcessing = false;
-                processBtn.disabled = false;
-                loadingCard.classList.add('hidden');
-            }
-        }
+    showProcessing("Extraindo áudio do vídeo...");
+    const formData = new FormData();
+    formData.append("file", f);
 
-        // Simular progresso
-        function simulateProgress() {
-            const progressBar = document.getElementById('progress-bar');
-            const loadingText = document.getElementById('loading-text');
-            
-            const steps = [
-                { progress: 20, text: 'Analisando arquivo...' },
-                { progress: 40, text: 'Extraindo áudio...' },
-                { progress: 60, text: 'Convertendo formato...' },
-                { progress: 80, text: 'Processando transcrição...' },
-                { progress: 100, text: 'Finalizando...' }
-            ];
+    try {
+      // 1) extrair e enviar ao n8n
+      const resp = await fetch("/processar", {
+        method: "POST",
+        body: formData
+      });
 
-            let currentStep = 0;
-            
-            function updateProgress() {
-                if (currentStep < steps.length) {
-                    const step = steps[currentStep];
-                    progressBar.style.width = step.progress + '%';
-                    loadingText.textContent = step.text;
-                    currentStep++;
-                    setTimeout(updateProgress, 1000);
-                }
-            }
-            
-            updateProgress();
-        }
+      if (!resp.ok) {
+        const txt = await resp.text();
+        showError("Erro ao processar vídeo: " + resp.status + " " + txt);
+        return;
+      }
 
-        // Exibir transcrição
-        function displayTranscription(data) {
-            // Atualizar estatísticas
-            document.getElementById('total-messages').textContent = data.stats.messages;
-            document.getElementById('total-speakers').textContent = data.stats.speakers;
-            document.getElementById('total-words').textContent = data.stats.words;
+      const data = await resp.json();
+      const utterances = data.utterances || [];
+      if (!utterances.length) {
+        showWarning("Nenhuma transcrição encontrada.");
+        utterancesMem = [];
+        enviarSolarContainer.style.display = "none";
+        chatHeader.style.display = "none";
+        chatContainer.style.display = "none";
+        statsTranscricao.style.display = "none";
+        return;
+      }
 
-            // Exibir mensagens do chat
-            const chatContainer = document.getElementById('chat-messages');
-            chatContainer.innerHTML = '';
+      utterancesMem = utterances.slice();
 
-            data.utterances.forEach((utterance, index) => {
-                const speakerClass = speakerColors[utterance.speaker]?.bg || 'speaker-0';
-                const speakerIcon = getSpeakerIcon(utterance.speaker);
-                
-                const messageHTML = `
-                    <div class="chat-message ${speakerClass}">
-                        <div class="speaker-label">
-                            <i class="${speakerIcon}"></i>
-                            ${utterance.speaker}
-                        </div>
-                        <div class="message-text">${utterance.text}</div>
-                    </div>
-                `;
-                
-                chatContainer.insertAdjacentHTML('beforeend', messageHTML);
-            });
+      showSuccess("Áudio enviado e processado com sucesso!");
 
-            // Mostrar resultados
-            transcriptionResults.classList.remove('hidden');
-            
-            // Scroll para os resultados
-            transcriptionResults.scrollIntoView({ behavior: 'smooth' });
-        }
+      // 2) exibir chat e estatísticas
+      chatHeader.style.display = "block";
+      chatContainer.style.display = "block";
+      statsTranscricao.style.display = "block";
+      enviarSolarContainer.style.display = "block";
 
-        function getSpeakerIcon(speaker) {
-            const icons = {
-                'SPEAKER_00': 'fas fa-user',
-                'SPEAKER_01': 'fas fa-user-tie',
-                'SPEAKER_02': 'fas fa-user-circle',
-                'SPEAKER_03': 'fas fa-user-graduate',
-                'SPEAKER_04': 'fas fa-user-shield'
-            };
-            return icons[speaker] || 'fas fa-user';
-        }
+      // stats
+      numMensagens.textContent = utterancesMem.length.toString();
+      const speakersSet = new Set(utterancesMem.map(u => u.speaker));
+      numParticipantes.textContent = speakersSet.size.toString();
+      const palavras = utterancesMem.reduce((acc,u)=> acc + (u.text || "").trim().split(/\s+/).filter(Boolean).length, 0);
+      numPalavras.textContent = palavras.toString();
 
-        // Enviar transcrição final
-        async function sendTranscription() {
-            if (!currentUtterances.length) {
-                showAlert('Nenhuma transcrição disponível para enviar', 'warning');
-                return;
-            }
+      // cores fixas por speaker
+      const colors = ["#0e258d","#764ba2","#4facfe","#43e97b","#fa709a","#a8edea","#ff9a9e"];
+      const speakerList = Array.from(speakersSet).sort();
+      const colorMap = {};
+      speakerList.forEach((sp, i)=> colorMap[sp] = colors[i % colors.length]);
 
-            try {
-                const response = await fetch('/send_transcription', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showAlert('Transcrição enviada para o SOLAR com sucesso!', 'success');
-                } else {
-                    showAlert(result.error || 'Erro ao enviar transcrição', 'error');
-                }
-            } catch (error) {
-                showAlert('Erro de conexão com o servidor', 'error');
-                console.error('Error:', error);
-            }
-        }
-
-        // Limpar sessão
-        async function clearSession() {
-            if (confirm('Tem certeza que deseja limpar toda a sessão? Esta ação não pode ser desfeita.')) {
-                try {
-                    const response = await fetch('/clear_session', {
-                        method: 'POST'
-                    });
-
-                    if (response.ok) {
-                        // Reset da interface
-                        fileInput.value = '';
-                        fileInfo.classList.add('hidden');
-                        videoPreview.classList.add('hidden');
-                        uploadActions.classList.add('hidden');
-                        transcriptionResults.classList.add('hidden');
-                        currentUtterances = [];
-                        
-                        showAlert('Sessão limpa com sucesso!', 'success');
-                        
-                        // Scroll para o topo
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
-                    } else {
-                        showAlert('Erro ao limpar sessão', 'error');
-                    }
-                } catch (error) {
-                    showAlert('Erro de conexão com o servidor', 'error');
-                    console.error('Error:', error);
-                }
-            }
-        }
-
-        // Drag and Drop
-        const uploadArea = document.querySelector('.upload-area');
-        
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
-
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight(e) {
-            uploadArea.style.borderColor = 'var(--dp-verde)';
-            uploadArea.style.backgroundColor = 'rgba(27, 94, 32, 0.1)';
-        }
-
-        function unhighlight(e) {
-            uploadArea.style.borderColor = 'var(--dp-azul)';
-            uploadArea.style.backgroundColor = 'linear-gradient(135deg, rgba(13, 71, 161, 0.03) 0%, rgba(27, 94, 32, 0.03) 100%)';
-        }
-
-        uploadArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            
-            if (files.length > 0) {
-                fileInput.files = files;
-                handleFileSelect({ target: { files: files } });
-            }
-        }
-
-        // Animação de entrada
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                setTimeout(() => {
-                    card.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-        });
-
-        // CSS adicional para animações
-        const additionalStyles = `
-            @keyframes slideUp {
-                to {
-                    opacity: 0;
-                    transform: translateY(-20px);
-                }
-            }
-            
-            .upload-area {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .card {
-                transform-origin: center bottom;
-            }
+      // mensagens
+      chatMessages.innerHTML = "";
+      utterancesMem.forEach(u => {
+        const icon = u.speaker === "SPEAKER_00" ? "fas fa-user" : (u.speaker === "SPEAKER_01" ? "fas fa-user-tie" : "fas fa-user-circle");
+        const color = colorMap[u.speaker] || "#0e258d";
+        const div = document.createElement("div");
+        div.className = "chat-message";
+        div.style.background = color;
+        div.style.color = "white";
+        div.innerHTML = `
+          <div class="speaker-label">
+            <i class="${icon}"></i> ${u.speaker}
+          </div>
+          <div class="message-text">${(u.text || "").replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>
         `;
+        chatMessages.appendChild(div);
+      });
 
-        const styleSheet = document.createElement('style');
-        styleSheet.textContent = additionalStyles;
-        document.head.appendChild(styleSheet);
-    </script>
-</body>
-</html>
+    } catch(err) {
+      showError("Erro no processamento: " + err);
+    }
+  });
+
+  btnEnviarSolar.addEventListener("click", async () => {
+    if (!utterancesMem.length) {
+      showWarning("Nenhuma transcrição para enviar.");
+      return;
+    }
+
+    progressArea.innerHTML = `
+      <div class="flex-center-container">
+        <div class="card">
+          <div class="card-title">
+            <i class="fas fa-paper-plane"></i> Enviando...
+          </div>
+          <p style="text-align:center;">
+            <span class="loading-spinner"></span> Enviando transcrição para o SOLAR...
+          </p>
+        </div>
+      </div>
+    `;
+
+    const finalTranscricao = utterancesMem.map(u => ({speaker: u.speaker, text: u.text}));
+
+    try {
+      const resp = await fetch("/enviar_solar", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({transcricao: finalTranscricao})
+      });
+      const data = await resp.json();
+      if (resp.ok && data.ok) {
+        showSuccess("Transcrição enviada com sucesso!");
+      } else {
+        showError("Erro ao enviar transcrição: " + (data.status || resp.status));
+      }
+    } catch(err) {
+      showError("Erro ao enviar transcrição: " + err);
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>{% block title %}Transcrição Chat — DPDF{% endblock %}</title>
+
+    <!-- Favicon mínimo para evitar 404 em ambientes restritos -->
+    <link rel="icon" href="data:,">
+
+    <!-- Tipografia e ícones -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+    <!-- CSS principal servido por Flask static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"/>
+
+    <!-- Metadados de acessibilidade e cor de tema (PWA/opcional) -->
+    <meta name="theme-color" content="#00923F">
+  </head>
+  <body class="stApp">
+    <noscript>
+      É necessário habilitar JavaScript para utilizar este aplicativo.
+    </noscript>
+
+    <main class="main-content-wrapper">
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Espaço para scripts específicos das páginas filhas -->
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
