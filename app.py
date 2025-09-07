@@ -61,4 +61,36 @@ def processar():
         if isinstance(result, list) and result:
             utterances = result[0].get("utterances", [])
         else:
-            utterances = result.get
+            utterances = result.get("utterances", []) if isinstance(result, dict) else []
+
+        return jsonify({"utterances": utterances})
+
+    except subprocess.CalledProcessError as e:
+        return jsonify({"error": "Falha na conversão ffmpeg", "stderr": e.stderr.decode(errors="ignore")}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        try:
+            if os.path.exists(tmp_video_path):
+                os.remove(tmp_video_path)
+            if os.path.exists(tmp_audio_path):
+                os.remove(tmp_audio_path)
+        except Exception:
+            pass
+
+
+@app.route("/enviar_solar", methods=["POST"])
+def enviar_solar():
+    payload = request.get_json(silent=True) or {}
+    transcricao = payload.get("transcricao", [])
+    try:
+        r = requests.post(N8N_WEBHOOK_URL_TRANSCRICAO, json={"transcricao": transcricao}, timeout=120)
+        if r.status_code == 200:
+            return jsonify({"ok": True})
+        return jsonify({"ok": False, "status": r.status_code, "body": r.text}), 502
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)), debug=False)
